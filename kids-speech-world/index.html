@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="kk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Сөйлеу әлемі</title>
+<meta name="description" content="Тахилалияны түзетуге арналған интерактивті логопедиялық ойындар әлемі: тыныс алу, баяу оқу, байсалды сөйлеу, сөйлеу қатынасы және зейін ойындары.">
+<meta name="theme-color" content="#7ad0ff">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main" onclick="document.getElementById('main').focus();return true;">Негізгі мазмұнға өту</a>
+<header id="top" role="banner"></header>
+<main id="main" tabindex="-1"><noscript><p style="padding:2rem;font-size:1.3rem">Бұл сайт жұмыс істеуі үшін JavaScript қосулы болуы керек.</p></noscript></main>
+<div id="live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+<div id="camwrap" hidden>
+  <video id="cam" playsinline muted autoplay aria-label="Камерадағы сенің кескінің. Ол тек осы экранда көрінеді."></video>
+  <button type="button" id="cam-off" class="btn btn-white small">📷 Өшіру</button>
+</div>
+<dialog id="dlg" aria-labelledby="dlg-title"></dialog>
+<script src="data.js"></script>
+<script src="core.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
