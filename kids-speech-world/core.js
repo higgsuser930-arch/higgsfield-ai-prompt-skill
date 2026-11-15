@@ -28,16 +28,18 @@ const btn = (label, cls, onclick, extra) => h('button', Object.assign({ type: 'b
 
 /* ---------- сақтау (localStorage қол жетпесе де жұмыс істейді) ---------- */
 const STORE_KEY = 'soileu-alemi-v1';
-const DEFAULTS = () => ({ stars: {}, points: 0, stats: {}, settings: { music: true, voice: true, rate: 0.85, scale: 1, hc: false, reduce: false, sens: 1, paceMs: 900 } });
+const DEFAULTS = () => ({ name: '', tasks: 0, stars: {}, points: 0, stats: {}, settings: { asr: false, asrAsked: false, music: true, voice: true, rate: 0.85, scale: 1, hc: false, reduce: false, sens: 1, paceMs: 900 } });
 let S = DEFAULTS();
 try {
   const raw = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
   if (raw && typeof raw === 'object') {
     const d = DEFAULTS();
-    S = { stars: raw.stars || {}, points: +raw.points || 0, stats: raw.stats || {}, settings: Object.assign(d.settings, raw.settings || {}) };
+    S = { name: String(raw.name || '').slice(0, 30), tasks: +raw.tasks || 0, stars: raw.stars || {}, points: +raw.points || 0, stats: raw.stats || {}, settings: Object.assign(d.settings, raw.settings || {}) };
   }
 } catch (e) { /* сақтау қол жетімсіз — жад ішінде жұмыс істейді */ }
 function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* ignore */ } }
+const kidName = () => S.name || 'досым';
+const fillName = (t) => String(t).replace(/\{name\}/g, kidName());
 const gstat = (id) => (S.stats[id] = S.stats[id] || { attempts: 0, mistakes: 0, points: 0 });
 const starsOf = (id) => { const g = GAMES.find((x) => x.id === id), n = g ? g.levels.length : 3, a = S.stars[id] || []; return Array.from({ length: n }, (_, i) => !!a[i]); };
 const unlocked = (id, l) => l === 1 || !!starsOf(id)[l - 2];
@@ -172,6 +174,49 @@ const Say = {
   }
 };
 if ('speechSynthesis' in window) { Say.load(); speechSynthesis.addEventListener && speechSynthesis.addEventListener('voiceschanged', () => Say.load()); }
+
+
+/* ---------- Сөйлеуді тану (браузердің SpeechRecognition қызметі) ----------
+   Тек ересек рұқсат берсе қосылады: кейбір браузерлер (Chrome, Edge) дыбысты өз серверіне жібереді. */
+const ASR = {
+  Ctor: window.SpeechRecognition || window.webkitSpeechRecognition || null,
+  get supported() { return !!this.Ctor; },
+  get enabled() { return this.supported && !!S.settings.asr; },
+  fold(s) {
+    const m = { 'ә': 'а', 'ғ': 'г', 'қ': 'к', 'ң': 'н', 'ө': 'о', 'ұ': 'у', 'ү': 'у', 'һ': 'х', 'і': 'и', 'ы': 'и', 'ё': 'е', 'э': 'е', 'й': 'и', 'ъ': '', 'ь': '' };
+    return String(s).toLowerCase().replace(/[.,!?;:«»"'…\-–—()\[\]]/g, ' ').replace(/[әғқңөұүһіыёэйъь]/g, (ch) => (ch in m ? m[ch] : ch)).replace(/\s+/g, ' ').trim();
+  },
+  lev(a, b) {
+    const m = a.length, n = b.length; if (!m) return n; if (!n) return m;
+    let prev = Array.from({ length: n + 1 }, (_, j) => j);
+    for (let i = 1; i <= m; i++) { const cur = [i]; for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; }
+    return prev[n];
+  },
+  sim(a, b) { const A = this.fold(a), B = this.fold(b); if (!A || !B) return 0; return 1 - this.lev(A, B) / Math.max(A.length, B.length); },
+  /* 0..1: айтылған мәтін мақсатты мәтінге қаншалықты сәйкес */
+  score(heard, target) {
+    const tw = this.fold(target).split(' ').filter(Boolean), hw = this.fold(heard).split(' ').filter(Boolean);
+    if (!tw.length || !hw.length) return 0;
+    const whole = this.sim(heard, target);
+    if (tw.length === 1) return Math.max(whole, ...hw.map((w) => this.sim(w, target)));
+    const cov = tw.filter((t) => hw.some((w) => this.sim(w, t) >= 0.6)).length / tw.length;
+    return Math.max(cov, whole);
+  },
+  best(alts, target) { return alts.reduce((m, t) => Math.max(m, this.score(t, target)), 0); },
+  /* {stop, done: Promise<{alts:[...], error:null|string}>} */
+  listen() {
+    let r = null, resolveFn, finished = false, alts = [];
+    const done = new Promise((res) => { resolveFn = res; });
+    const fin = (err) => { if (finished) return; finished = true; resolveFn({ alts, error: err || null }); };
+    try {
+      r = new this.Ctor(); r.lang = 'kk-KZ'; r.interimResults = false; r.maxAlternatives = 5; r.continuous = false;
+      r.onresult = (e) => { for (let i = 0; i < e.results.length; i++) for (let j = 0; j < e.results[i].length; j++) alts.push(e.results[i][j].transcript); };
+      r.onerror = (e) => fin(e.error || 'error'); r.onend = () => fin(null);
+      r.start();
+    } catch (e) { fin('start-failed'); }
+    return { stop() { try { r && r.stop(); } catch (e) { /* ignore */ } setTimeout(() => fin(null), 1800); }, done };
+  }
+};
 
 /* ---------- Микрофон және камера ---------- */
 const Media = {
@@ -388,12 +433,20 @@ function devicePanel() {
   const render = () => root.replaceChildren(
     row('🎤', 'Микрофон', () => Media.micOn, () => Media.enableMic(), () => Media.disableMic(), 'mic'),
     row('📷', 'Камера', () => Media.camOn, () => Media.enableCam(), () => Media.disableCam(), 'cam'),
+    ASR.supported ? asrRow() : h('p', { class: 'privacy' }, 'Бұл браузерде сөйлеуді тану жоқ: ойын дауыстың бар-жоғы мен қарқыны бойынша тексереді. Chrome немесе Edge қолданып көруге болады.'),
     msg,
     h('p', { class: 'privacy' }, '🔒 Микрофон қосулы кезде ойын таныстырылымынан бастап аяқталғанға дейін дыбыс жазылады. Жазба тек осы құрылғыда (браузер жадында) сақталады, интернетке жіберілмейді. Оны «Логопедке арналған бөлім» ішінде тыңдауға, жүктеп алуға немесе өшіруге болады. Камера бейнесі жазылмайды, тек өзіңді көру үшін.'),
-    h('p', { class: 'privacy' }, 'Ойынның өзі дауыстың бар-жоғын және қарқынын ғана байқайды. Сөздің дұрыстығын логопед жазбаны тыңдап тексереді. Құрылғысыз да ойнауға болады.')
+    h('p', { class: 'privacy' }, 'Камера бейнені тек баланың құрылғысында көрсетеді. Микрофонның тану нәтижесі сөйлеу дұрыстығының толық логопедиялық бағасы болып саналмайды: сөздің дұрыстығын логопед жазбаны тыңдап тексереді. Құрылғысыз да ойнауға болады.')
   );
   render(); const f = () => { if (root.isConnected) { const m = msg.textContent; render(); msg.textContent = m; } }; Media.listeners.add(f);
   return root;
+}
+
+function asrRow() {
+  const on = () => !!S.settings.asr;
+  const state = h('span', { class: 'chip ' + (on() ? 'chip-on' : '') }, on() ? 'Қосулы' : 'Өшірулі');
+  const b = btn(on() ? 'Сөйлеуді тануды өшіру' : 'Сөйлеуді тануды қосу', on() ? 'btn-white' : 'btn-mint', () => { S.settings.asr = !on(); S.settings.asrAsked = true; save(); state.textContent = on() ? 'Қосулы' : 'Өшірулі'; state.classList.toggle('chip-on', on()); b.textContent = on() ? 'Сөйлеуді тануды өшіру' : 'Сөйлеуді тануды қосу'; b.className = 'btn ' + (on() ? 'btn-white' : 'btn-mint'); }, { 'data-dev': 'asr' });
+  return h('div', { class: 'dev-row' }, h('span', { class: 'dev-ico', 'aria-hidden': 'true' }, '🗣️'), h('div', { class: 'dev-txt' }, h('strong', {}, 'Сөйлеуді тану'), state, h('span', { class: 'privacy' }, 'Балаң айтқан сөзді үлгімен салыстырады. Ескерту: Chrome мен Edge сияқты браузерлер дыбысты тану үшін өз серверіне жіберуі мүмкін. Ересек адам рұқсат берсін.')), b);
 }
 
 /* Қолжетімділік параметрлері */

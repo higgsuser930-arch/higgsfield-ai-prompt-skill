@@ -4,7 +4,7 @@
 const main = () => $('#main');
 const gameById = (id) => GAMES.find((g) => g.id === id);
 const dirById = (id) => DIRS.find((d) => d.id === id);
-const NAMES = { '🍎': ['алма', 'алманы'], '⚽': ['доп', 'допты'], '🏠': ['үй', 'үйді'], '🐱': ['мысық', 'мысықты'], '🌷': ['гүл', 'гүлді'], '☀️': ['күн', 'күнді'], '🐶': ['ит', 'итті'], '🥕': ['сәбіз', 'сәбізді'], '🌙': ['ай', 'айды'], '🚗': ['көлік', 'көлікті'], '📖': ['кітап', 'кітапты'], '🐦': ['құс', 'құсты'], '🍌': ['банан', 'бананды'], '🎈': ['шар', 'шарды'], '🦋': ['көбелек', 'көбелекті'], '🌳': ['ағаш', 'ағашты'], '🍉': ['қарбыз', 'қарбызды'], '🐟': ['балық', 'балықты'], '🐻': ['аю', 'аюды'], '🍅': ['қызанақ', 'қызанақты'], '🚲': ['велосипед', 'велосипедті'], '🎂': ['торт', 'тортты'], '🐢': ['тасбақа', 'тасбақаны'] };
+const NAMES = { '🍎': ['алма', 'алманы'], '⚽': ['доп', 'допты'], '🏠': ['үй', 'үйді'], '🐱': ['мысық', 'мысықты'], '🌷': ['гүл', 'гүлді'], '☀️': ['күн', 'күнді'], '🐶': ['ит', 'итті'], '🥕': ['сәбіз', 'сәбізді'], '🌙': ['ай', 'айды'], '🚗': ['көлік', 'көлікті'], '📖': ['кітап', 'кітапты'], '🐦': ['құс', 'құсты'], '🍌': ['банан', 'бананды'], '🎈': ['шар', 'шарды'], '🦋': ['көбелек', 'көбелекті'], '🌳': ['ағаш', 'ағашты'], '🍉': ['қарбыз', 'қарбызды'], '🐟': ['балық', 'балықты'], '🐻': ['аю', 'аюды'], '🍅': ['қызанақ', 'қызанақты'], '🚲': ['велосипед', 'велосипедті'], '🎂': ['торт', 'тортты'], '🐢': ['тасбақа', 'тасбақаны'], '🐰': ['қоян', 'қоянды'] };
 const SC = { cleanups: [], token: 0, run: null };
 let lastRun = null;
 let curGid = null, curName = 'home', lastName = 'home';
@@ -53,7 +53,7 @@ function toggleSound() { Snd.init(); S.settings.music = !S.settings.music; save(
 const soundBtn = (cls, longLabel) => h('button', { type: 'button', class: 'btn ' + (cls || ''), 'data-sound': '', onclick: toggleSound }, h('span', { class: 'i', 'aria-hidden': 'true' }), longLabel ? h('span', { class: 't' }) : h('span', { class: 't sr-only' }));
 
 /* ---------- Маршрутизатор ---------- */
-const ROUTES = [[/^home$/, 'home'], [/^islands$/, 'islands'], [/^dir-(\d)$/, 'dir'], [/^game-(\d+)$/, 'gameIntro'], [/^play-(\d+)-(\d)$/, 'play'], [/^result-(\d+)-(\d)$/, 'result'], [/^done-(\d+)$/, 'done'], [/^therapist$/, 'therapist']];
+const ROUTES = [[/^home$/, 'home'], [/^islands$/, 'islands'], [/^dir-(\d)$/, 'dir'], [/^game-(\d+)$/, 'gameIntro'], [/^play-(\d+)-(\d)$/, 'play'], [/^result-(\d+)-(\d)$/, 'result'], [/^done-(\d+)$/, 'done'], [/^therapist$/, 'therapist'], [/^progress$/, 'progress'], [/^finale$/, 'finale']];
 const SCREENS = {};
 function route() {
   cleanupAll();
@@ -79,38 +79,47 @@ SCREENS.home = () => {
   const root = main(); root.className = 'screen home';
   const rules = () => openDlg('Ойын ережесі', h('div', { class: 'rules' },
     h('ol', {},
-      h('li', {}, 'Бес арал бар. Әр аралда бірнеше ойын, әр ойында 2–3 деңгей бар.'),
-      h('li', {}, 'Алдымен 1-деңгейді орында. Ол өтілмесе, 2-деңгей ашылмайды. 2-деңгейден кейін келесі деңгей ашылады.'),
-      h('li', {}, 'Әр деңгейде тапсырманы оқы, «Бастау» батырмасын бас да, кейіпкер көрсеткендей орында.'),
-      h('li', {}, 'Орындалған деңгей үшін жұлдызша аласың. Ұпай да жиналады.'),
+      h('li', {}, 'Есіміңді жазып, «Сабақты бастау» батырмасын бас. Негізгі мәзірде бес бағыт ашылады.'),
+      h('li', {}, 'Әр бағытта бірнеше ойын бар, әр ойында 3 деңгей.'),
+      h('li', {}, 'Алдымен 1-деңгейді орында. Ол өтілмесе, 2-деңгей ашылмайды. 2-деңгейден кейін 3-деңгей ашылады.'),
+      h('li', {}, 'Әр тапсырмада суретті қара, нұсқаулық бейнежазбаны көр, содан кейін орында. Камера мен микрофонды қосуға болады.'),
+      h('li', {}, 'Дұрыс орындасаң, келесі кезең ашылады және 10 ұпай аласың. Қателессең, қайта байқауға болады.'),
       h('li', {}, 'Асықпа! Анық әрі әдемі сөйлеу — басты мақсат.'),
-      h('li', {}, 'Микрофон мен камера міндетті емес. Оларды құрылғылар панелінен қоса аласың. Микрофон қосулы болса, ойын таныстырылымынан бастап аяқталғанға дейін дыбыс жазылады.'))), { wide: true });
-  const intro = () => introAnim();
+      h('li', {}, 'Микрофон қосулы болса, ойын таныстырылымынан бастап аяқталғанға дейін дыбыс жазылады. Жазба тек осы құрылғыда сақталады.'))), { wide: true });
+  const err = h('p', { class: 'dev-msg', role: 'alert', id: 'name-err' });
+  const input = h('input', { id: 'kid-name', type: 'text', maxlength: '30', autocomplete: 'given-name', 'aria-describedby': 'name-err', value: S.name });
+  const form = h('form', { class: 'name-form', novalidate: '' },
+    h('label', { for: 'kid-name', class: 'lab' }, 'Есіміңді жаз'),
+    h('div', { class: 'row' }, input, btn('Сабақты бастау', 'btn-sun xl', null, { type: 'submit', id: 'start-btn' })), err);
+  form.addEventListener('submit', (e) => {
+    e.preventDefault(); const v = input.value.trim().replace(/\s+/g, ' ');
+    if (!v) { err.textContent = 'Алдымен есіміңді жаз, сонда бастаймыз.'; input.focus(); return; }
+    S.name = v.slice(0, 30); save(); Snd.init(); Snd.play('ok'); go('islands');
+  });
   root.append(clouds(),
     h('div', { class: 'wrap hero' },
       h('div', { class: 'hero-txt' },
-        h('p', { class: 'eyebrow' }, 'Интерактивті логопедиялық ойындар әлемі'),
-        h('h1', {}, 'Сөйлеу әлемі'),
-        h('p', { class: 'sub' }, 'Тахилалияны түзетуге арналған интерактивті логопедиялық ойындар әлемі'),
-        h('div', { class: 'bubble big' }, HOME_TEXT, btn('🔊 Тыңдау', 'btn-white small', () => Say.speak(HOME_TEXT))),
+        h('p', { class: 'eyebrow' }, 'Интерактивті логопедиялық ойын платформасы'),
+        h('h1', {}, 'СӨЙЛЕУ ӘЛЕМІ'),
+        h('p', { class: 'sub' }, 'Тахилалиясы бар балалардың сөйлеу қарқынын реттеуге арналған интерактивті логопедиялық ойын платформасы'),
+        h('div', { class: 'bubble big' }, h('div', { class: 'bub-t' }, HOME_TEXT.map((t) => h('p', {}, t))), btn('🔊 Тыңдау', 'btn-white small', () => Say.speak(HOME_TEXT.join(' ')))),
+        form,
         h('div', { class: 'btn-grid' },
-          btn('ОЙЫНДЫ БАСТАУ', 'btn-sun xl', () => { Snd.init(); Snd.play('ok'); go('islands'); }, { id: 'start-btn' }),
           btn('ОЙЫН ЕРЕЖЕСІ', 'btn-mint', rules),
           soundBtn('btn-grape', true),
           btn('ЛОГОПЕДКЕ АРНАЛҒАН БӨЛІМ', 'btn-white', () => go('therapist'))),
-        h('div', { class: 'under' }, btn('▶ Таныстыру анимациясы (12 секунд)', 'btn-link', intro), btn('🎤 Микрофон / 📷 камера', 'btn-link', () => openDlg('Микрофон мен камера', devicePanel(), { wide: true }))))
-      ,
+        h('div', { class: 'under' }, btn('▶ Таныстыру анимациясы (12 секунд)', 'btn-link', () => introAnim()), btn('🎤 Микрофон / 📷 камера', 'btn-link', () => openDlg('Микрофон мен камера', devicePanel(), { wide: true })))),
       h('div', { class: 'hero-art' }, mainMascot(), h('div', { class: 'friends', 'aria-hidden': 'true' }, ['🐰', '🐻', '🦊', '🐼'].map((e, i) => h('span', { style: { '--d': i * 0.4 + 's' } }, e))))),
     h('div', { class: 'hills', 'aria-hidden': 'true' }));
   refreshSound();
 };
 
 function introAnim() {
-  const slides = [['👋', 'Сәлем, досым!'], ['🌈', 'Сөйлеу әлеміне қош келдің!'], ['🏝️', 'Бес арал және ' + GAMES.length + ' ойын сені күтіп тұр.'], ['⭐', 'Асықпай, анық әрі әдемі сөйлейік!']];
+  const slides = [['👋', 'Сәлем, жас досым!'], ['🌈', '«Сөйлеу әлеміне» қош келдің!'], ['🏝️', 'Бес бағыт және ' + GAMES.length + ' ойын сені күтіп тұр.'], ['⭐', 'Асықпай, анық әрі әдемі сөйлейік!']];
   let i = 0, timer = null, playing = !reducedMotion();
   const box = h('div', { class: 'intro-slide', role: 'status', 'aria-live': 'polite' });
   const dots = h('div', { class: 'dots', 'aria-hidden': 'true' });
-  const playBtn = btn(playing ? '⏸ Тоқтату' : '▶ Ойнату', 'btn-white', () => { playing = !playing; playBtn.textContent = playing ? '⏸ Тоқтату' : '▶ Ойнату'; if (playing) tick(); else clearTimeout(timer); });
+  const playBtn = btn(playing ? '⏸️ Тоқтату' : '▶ Ойнату', 'btn-white', () => { playing = !playing; playBtn.textContent = playing ? '⏸️ Тоқтату' : '▶ Ойнату'; if (playing) tick(); else clearTimeout(timer); });
   const next = btn('Келесі ▶', 'btn-white', () => { clearTimeout(timer); i = (i + 1) % slides.length; show(); });
   const show = () => { box.replaceChildren(h('div', { class: 'big-e', 'aria-hidden': 'true' }, slides[i][0]), h('p', {}, slides[i][1])); dots.replaceChildren(...slides.map((_, k) => h('i', { class: k === i ? 'on' : '' }))); };
   const tick = () => { clearTimeout(timer); if (!playing) return; timer = setTimeout(() => { if (i < slides.length - 1) { i++; show(); tick(); } else { playing = false; playBtn.textContent = '↻ Қайта көру'; } }, 3000); };
@@ -119,18 +128,54 @@ function introAnim() {
   openDlg('Таныстыру', h('div', { class: 'intro' }, box, dots, h('div', { class: 'row' }, playBtn, next)), { onclose: () => clearTimeout(timer) });
 }
 
-/* ============================ АРАЛДАР ============================ */
+/* ============================ НЕГІЗГІ МӘЗІР ============================ */
 SCREENS.islands = () => {
+  if (!S.name) { go('home'); return false; }
   Snd.setMood('calm'); Snd.applyMusic();
   const root = main(); root.className = 'screen islands';
   root.append(clouds(), h('div', { class: 'wrap' },
-    h('div', { class: 'page-head' }, btn('← Басты бет', 'btn-white', () => go('home')), h('h1', {}, 'Ойын бағытын таңда'), h('p', { class: 'total' }, '⭐ ', totalStars() + ' / ' + totalLevels())),
+    h('div', { class: 'page-head' }, btn('← Басты бет', 'btn-white', () => go('home')), h('h1', {}, 'Негізгі мәзір'), btn('🏅 Жетістіктер', 'btn-sun', () => go('progress')), h('p', { class: 'total' }, '⭐ ' + totalStars() + ' / ' + totalLevels() + ' · 🏅 ' + S.points)),
+    h('p', { class: 'greet' }, 'Сәлем, ' + S.name + '! Бағытты таңда: ' + DIRS.length + ' бағыт, ' + GAMES.length + ' ойын.'),
     h('ul', { class: 'island-grid' }, DIRS.map((d) => {
       const gs = GAMES.filter((g) => g.dir === d.id), got = gs.reduce((n, g) => n + starsOf(g.id).filter(Boolean).length, 0), all = gs.reduce((n, g) => n + g.levels.length, 0), cnt = gs.length;
-      return h('li', {}, h('a', { class: 'island', href: '#dir-' + d.id, style: { '--c1': d.c1, '--c2': d.c2 }, 'aria-label': d.id + '. ' + d.name + '. Белгісі: ' + d.sub + '. ' + cnt + ' ойын. Жұлдыз: ' + got + ' / ' + all },
+      return h('li', {}, h('a', { class: 'island', href: '#dir-' + d.id, style: { '--c1': d.c1, '--c2': d.c2 }, 'aria-label': d.id + '. ' + d.name + '. ' + cnt + ' ойын. Жұлдыз: ' + got + ' / ' + all },
         h('span', { class: 'isl-num' }, d.id), h('span', { class: 'isl-ico', 'aria-hidden': 'true' }, d.icon), h('span', { class: 'isl-name' }, d.name), h('span', { class: 'isl-count' }, cnt + ' ойын'), h('span', { class: 'isl-prog', 'aria-hidden': 'true' }, '⭐ ' + got + '/' + all)));
     }))));
 };
+
+/* ============================ ЖЕТІСТІКТЕР ============================ */
+SCREENS.progress = () => {
+  if (!S.name) { go('home'); return false; }
+  Snd.setMood('calm'); Snd.applyMusic();
+  const root = main(); root.className = 'screen islands progress';
+  const done = totalStars(), all = totalLevels(), pct = Math.round((done / Math.max(1, all)) * 100);
+  const tile = (k, v) => h('div', {}, h('dt', {}, k), h('dd', {}, String(v)));
+  const gamesDone = GAMES.filter((g) => starsOf(g.id).every(Boolean)).length;
+  root.append(clouds(), h('div', { class: 'wrap' },
+    h('div', { class: 'page-head' }, btn('← Негізгі мәзір', 'btn-white', () => go('islands')), h('h1', {}, 'Жетістіктер')),
+    h('p', { class: 'greet' }, S.name + ', міне сенің нәтижең:'),
+    h('dl', { class: 'res-list left' }, tile('Жиналған ұпай', S.points), tile('Орындалған тапсырма', S.tasks), tile('Өткен деңгей', done + ' / ' + all), tile('Аяқталған ойын', gamesDone + ' / ' + GAMES.length)),
+    h('div', { class: 'ach' }, h('p', { class: 'ach-t' }, 'Жалпы жетістік: ' + pct + '%'), h('div', { class: 'meter lg', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(pct), 'aria-label': 'Жалпы жетістік' }, h('i', { style: { width: pct + '%' } }))),
+    DIRS.map((d) => h('section', { class: 'card' }, h('h2', {}, d.icon + ' ' + d.name),
+      h('ul', { class: 'plist' }, GAMES.filter((g) => g.dir === d.id).map((g) => h('li', {}, h('a', { href: '#game-' + g.id }, g.title), stars(starsOf(g.id))))))),
+    done === all ? btn('🎉 Құттықтау экраны', 'btn-sun xl', () => go('finale')) : null));
+};
+
+SCREENS.finale = () => {
+  if (!S.name || totalStars() < totalLevels()) { go('progress'); return false; }
+  Snd.setMood('play'); Snd.applyMusic();
+  const root = main(); root.className = 'screen result done';
+  const speak = [FINALE.title, FINALE.text].concat(FINALE.motto).join(' ');
+  setTimeout(() => { Snd.play('win'); Say.speak(speak); }, 300);
+  root.append(clouds(), confetti(), h('div', { class: 'wrap center' },
+    h('h1', {}, FINALE.title), h('p', { class: 'greet' }, S.name),
+    h('div', { class: 'res-stars' }, stars(Array(3).fill(true), true)),
+    h('div', { class: 'bubble col' }, h('p', {}, FINALE.text), FINALE.motto.map((t) => h('p', { class: 'motto' }, t))),
+    h('dl', { class: 'res-list' }, tile2('Жиналған ұпай', S.points), tile2('Орындалған тапсырма', S.tasks), tile2('Өткен деңгей', totalStars() + ' / ' + totalLevels())),
+    h('div', { class: 'row center' }, btn('🏅 Жетістіктер', 'btn-sun xl', () => go('progress'), { id: 'start-btn' }), btn('Басты бетке қайту', 'btn-mint', () => go('home')))));
+  setTimeout(() => { const b = $('#start-btn'); if (b) b.focus({ preventScroll: true }); }, 50);
+};
+const tile2 = (k, v) => h('div', {}, h('dt', {}, k), h('dd', {}, String(v)));
 
 SCREENS.dir = (id) => {
   const d = dirById(id); if (!d) { go('islands'); return false; }
@@ -138,6 +183,7 @@ SCREENS.dir = (id) => {
   const root = main(); root.className = 'screen dir'; root.style.setProperty('--c1', d.c1); root.style.setProperty('--c2', d.c2);
   root.append(clouds(), h('div', { class: 'wrap' },
     h('div', { class: 'page-head' }, btn('← Аралдар', 'btn-white', () => go('islands')), h('h1', {}, d.icon + ' ' + d.name), h('p', { class: 'total' }, d.sub)),
+    h('p', { class: 'greet' }, '🎯 Мақсаты: ' + d.goal),
     h('ul', { class: 'game-list' }, GAMES.filter((g) => g.dir === id).map((g) => h('li', {}, h('a', { class: 'game-card', href: '#game-' + g.id, style: { '--b1': g.bg[0], '--b2': g.bg[1] }, 'aria-label': g.id + '-ойын. ' + g.title + '. Жұлдыз: ' + starsOf(g.id).filter(Boolean).length + ' / ' + g.levels.length },
       h('span', { class: 'gc-ico', 'aria-hidden': 'true' }, g.icon), h('span', { class: 'gc-txt' }, h('span', { class: 'gc-n' }, g.id + '-ойын'), h('strong', {}, g.title)), stars(starsOf(g.id))))))));
 };
@@ -155,6 +201,7 @@ SCREENS.gameIntro = (id) => {
       mascotBadge(g.mascot, g.mascotName),
       h('div', { class: 'intro-txt' }, h('p', { class: 'eyebrow' }, g.id + '-ойын'), h('h1', {}, g.title),
         h('div', { class: 'bubble' }, g.intro, btn('🔊', 'btn-white small', () => Say.speak(g.intro), { 'aria-label': 'Кейіпкер сөзін тыңдау' })),
+        g.goal ? h('p', { class: 'note' }, '🎯 Мақсаты: ' + g.goal) : null,
         g.note ? h('p', { class: 'note' }, '⚠️ ' + g.note) : null,
         h('div', { class: 'row' }, btn('Ойынды бастау', 'btn-sun xl', () => { Snd.init(); Snd.play('ok'); go('play-' + id + '-' + nextLevel); }, { id: 'start-btn' }), btn('Қалай орындау керек?', 'btn-mint', how)),
         h('div', { class: 'devline' }, h('span', { class: 'chip' }, '🎤 Микрофон: ' + ({ none: 'қолданылмайды', optional: 'қосымша', required: 'қажет' })[g.mic]), h('span', { class: 'chip' }, '📷 Камера: ' + ({ none: 'қолданылмайды', optional: 'қосымша' })[g.cam])))),
@@ -189,6 +236,24 @@ function breathDemo() {
   return h('div', { class: 'demo', role: 'img', 'aria-label': 'Тыныс алу үлгісі: үлкейгенде мұрнымен дем аламыз, кішірейгенде ауызбен баяу шығарамыз' }, h('div', { class: 'demo-c' }), h('div', { class: 'demo-t' }, h('span', { class: 'a' }, 'Мұрнымен дем ал'), h('span', { class: 'b' }, 'Ауызбен баяу шығар')));
 }
 
+function demoCard(g, lv) {
+  const first = lv.steps[0];
+  if (lv.engine === 'breath') {
+    const d = breathDemo();
+    const pb = btn('⏸️ Тоқтату', 'btn-white small', () => { d.classList.toggle('paused'); pb.textContent = d.classList.contains('paused') ? '▶ Ойнату' : '⏸️ Тоқтату'; });
+    return h('div', { class: 'video-card' }, h('p', { class: 'vc-title' }, '🎬 Бейнежазба: жаттығу үлгісі'), d, h('p', { class: 'vc-cap' }, 'Дөңгелек үлкейгенде мұрнымен дем ал, кішірейгенде ауызбен біркелкі шығар.'), pb);
+  }
+  if (first && first.demo) {
+    const text = fillName(first.text), disp = first.rhythm && first.syl ? first.syl.map((w) => w.join('-')).join(' ') : text;
+    const els = wordsEls(first.upper ? disp.toUpperCase() : disp, { pace: first.pace });
+    const line = h('p', { class: 'say-text sm' }); els.forEach((e, i) => line.append(e, i < els.length - 1 ? ' ' : ''));
+    const live = { wait: (ms) => new Promise((res) => setTimeout(() => res(true), ms)) };
+    const pb = btn('▶ Үлгіні көр', 'btn-mint', async () => { pb.disabled = true; const gd = makeGuide(els, live, Math.max(700, S.settings.paceMs)); await Say.speak(text, { rate: Math.min(0.75, S.settings.rate) }); await gd.done; gd.stop(); pb.disabled = false; });
+    return h('div', { class: 'video-card' }, h('p', { class: 'vc-title' }, '🎬 Нұсқаулық бейнежазба: үлгі оқу'), first.pic ? picEl(first.pic) : null, line, h('p', { class: 'vc-cap' }, 'Кейіпкер сөзді баяу оқиды. Көрсетілген сөзді бақыла да, соңынан қайтала.'), pb);
+  }
+  return null;
+}
+
 /* ============================ ТАПСЫРМА ЖҮРГІЗУШІСІ ============================ */
 SCREENS.play = (gid, l) => {
   const g = gameById(gid), lv = g && g.levels[l - 1];
@@ -214,7 +279,7 @@ SCREENS.play = (gid, l) => {
     prog.textContent = started ? 'Тапсырма ' + (si + 1) + ' / ' + lv.steps.length : lv.steps.length + ' тапсырма';
   };
   function preview() {
-    area.replaceChildren(h('div', { class: 'preview' }, lv.engine === 'breath' ? breathDemo() : h('div', { class: 'pv-ico', 'aria-hidden': 'true' }, g.icon), h('p', { class: 'pv-txt' }, 'Бастау үшін төмендегі «Бастау» батырмасын бас.'), g.note ? h('p', { class: 'note' }, '⚠️ ' + g.note) : null));
+    area.replaceChildren(h('div', { class: 'preview' }, demoCard(g, lv) || h('div', { class: 'pv-ico', 'aria-hidden': 'true' }, g.icon), h('p', { class: 'pv-txt' }, 'Бастау үшін төмендегі «Бастау» батырмасын бас.'), g.note ? h('p', { class: 'note' }, '⚠️ ' + g.note) : null));
   }
   function mount() {
     clean(); area.replaceChildren(); stepDone = false; stepMistakes = 0; upd();
@@ -224,22 +289,24 @@ SCREENS.play = (gid, l) => {
       alive: () => my === tok,
       cleanup: (f) => cleanups.push(f),
       wait: (ms) => new Promise((res) => { const t = setTimeout(() => res(my === tok), ms); cleanups.push(() => { clearTimeout(t); res(false); }); }),
-      ok: () => { if (my !== tok || stepDone) return; stepDone = true; run.done++; const p = 10 + (stepMistakes === 0 ? 5 : 0); run.points += p; Snd.play('ok'); say(pick(PRAISE) + ' ' + (si === lv.steps.length - 1 ? lv.praise : ''), true); announce('Тапсырма орындалды'); upd(); bNext.focus(); },
-      wrong: (msg) => { if (my !== tok) return; stepMistakes++; run.mistakes++; Snd.play('no'); say(msg || 'Тағы бір рет асықпай байқап көрейік!', true); },
+      ok: () => { if (my !== tok || stepDone) return; stepDone = true; run.done++; run.points += 10; S.tasks++; Snd.play('ok'); say(FB.ok, true); announce('Тапсырма орындалды'); upd(); bNext.focus(); },
+      wrong: (msg) => { if (my !== tok) return; stepMistakes++; run.mistakes++; Snd.play('no'); say(msg || FB.wrong, true); },
       mistakes: () => stepMistakes
     };
     ENGINES[lv.engine](ui);
   }
   function start() { started = true; Snd.init(); gstat(gid).attempts++; save(); say(lv.say, true); si = 0; mount(); }
-  function retry() { gstat(gid).attempts++; save(); say(lv.retry || 'Тағы бір рет асықпай байқап көрейік!', false); mount(); }
+  function retry() { gstat(gid).attempts++; save(); say(lv.retry || FB.wrong, false); mount(); }
   function next() {
     if (!stepDone) return;
     if (si < lv.steps.length - 1) { si++; mount(); const first = area.querySelector('button, a'); if (first) first.focus({ preventScroll: true }); return; }
     /* деңгей аяқталды */
     clean();
+    const wasAll = GAMES.every((x) => starsOf(x.id).every(Boolean));
     const sa = (S.stars[gid] = S.stars[gid] || []); const was = !!sa[l - 1]; sa[l - 1] = true;
     const gs = gstat(gid); gs.points += run.points; gs.mistakes += run.mistakes; S.points += run.points; save();
-    lastRun = { gid, l, points: run.points, mistakes: run.mistakes, was }; go('result-' + gid + '-' + l);
+    lastRun = { gid, l, points: run.points, mistakes: run.mistakes, was };
+    if (!wasAll && GAMES.every((x) => starsOf(x.id).every(Boolean))) go('finale'); else go('result-' + gid + '-' + l);
   }
   root.append(clouds(), h('div', { class: 'wrap' },
     h('div', { class: 'play-head' }, btn('← Артқа', 'btn-white small', () => go('game-' + gid)), h('div', { class: 'ph-t' }, h('p', { class: 'eyebrow' }, g.id + '-ойын · ' + g.title), h('h1', {}, l + '-деңгей. «' + lv.title + '»'))),
@@ -258,13 +325,15 @@ SCREENS.result = (gid, l) => {
   Snd.setMood('play'); Snd.applyMusic();
   const root = main(); root.className = 'screen result'; root.style.setProperty('--b1', g.bg[0]); root.style.setProperty('--b2', g.bg[1]);
   const r = lastRun && lastRun.gid === gid && lastRun.l === l ? lastRun : null;
-  setTimeout(() => { Snd.play('star'); Say.speak(lv.praise); }, 300);
+  setTimeout(() => { Snd.play('star'); Say.speak(FB.levelTitle + ' ' + FB.levelSub + '. ' + FB.levelText); }, 300);
   root.append(clouds(), confetti(), h('div', { class: 'wrap center' },
-    h('p', { class: 'eyebrow' }, g.title), h('h1', {}, l + '-деңгей орындалды!'),
+    h('p', { class: 'eyebrow' }, g.title + ' · ' + l + '-деңгей'), h('h1', {}, FB.levelTitle),
+    h('p', { class: 'res-sub' }, FB.levelSub),
     h('div', { class: 'res-stars' }, stars([true, false, false].map((v, i) => i === 0), true)),
+    h('p', { class: 'plus', 'aria-label': (r ? r.points : 0) + ' ұпай қосылды' }, '+' + (r ? r.points : 0) + ' ұпай'),
     mascotBadge(lv.mascot || g.mascot, g.mascotName),
-    h('div', { class: 'bubble' }, lv.praise),
-    h('dl', { class: 'res-list' }, h('div', {}, h('dt', {}, 'Бұл деңгейдегі ұпай'), h('dd', {}, String(r ? r.points : '—'))), h('div', {}, h('dt', {}, 'Ойындағы жұлдыз'), h('dd', {}, starsOf(gid).filter(Boolean).length + ' / ' + g.levels.length))),
+    h('div', { class: 'bubble' }, FB.levelText),
+    h('dl', { class: 'res-list' }, h('div', {}, h('dt', {}, 'Жалпы ұпай'), h('dd', {}, String(S.points))), h('div', {}, h('dt', {}, 'Ойындағы жұлдыз'), h('dd', {}, starsOf(gid).filter(Boolean).length + ' / ' + g.levels.length))),
     h('div', { class: 'row center' },
       btn('Қайта ойнау', 'btn-white', () => go('play-' + gid + '-' + l)),
       l < g.levels.length ? btn('Келесі деңгей', 'btn-sun xl', () => go('play-' + gid + '-' + (l + 1)), { id: 'start-btn' }) : btn('Ойынды аяқтау', 'btn-sun xl', () => go('done-' + gid), { id: 'start-btn' }))));
@@ -284,12 +353,12 @@ SCREENS.done = (gid) => {
   const root = main(); root.className = 'screen result done'; root.style.setProperty('--b1', g.bg[0]); root.style.setProperty('--b2', g.bg[1]);
   const st = starsOf(gid), gs = gstat(gid), gi = GAMES.findIndex((x) => x.id === gid), nextId = gi >= 0 && gi < GAMES.length - 1 ? GAMES[gi + 1].id : null;
   const recBox = h('div', { class: 'rec-done' });
-  setTimeout(() => { Snd.play('win'); Say.speak(FINAL_TEXT); }, 300);
+  setTimeout(() => { Snd.play('win'); Say.speak(FB.gameDone); }, 300);
   root.append(clouds(), confetti(), h('div', { class: 'wrap center' },
     h('h1', {}, 'Ойын аяқталды!'),
     h('div', { class: 'res-stars' }, stars(st, true)),
     h('div', { class: 'cheer' }, mascotBadge(g.mascot, g.mascotName)),
-    h('div', { class: 'bubble' }, FINAL_TEXT),
+    h('div', { class: 'bubble' }, FB.gameDone),
     h('dl', { class: 'res-list' }, h('div', {}, h('dt', {}, 'Жиналған ұпай'), h('dd', {}, String(gs.points))), h('div', {}, h('dt', {}, 'Ойын'), h('dd', {}, g.title))),
     h('div', { class: 'row center' },
       btn('Қайта ойнау', 'btn-white', () => go('game-' + gid)),
@@ -334,7 +403,7 @@ SCREENS.therapist = () => {
       recSection(),
       h('section', { class: 'card' }, h('h2', {}, 'Құрылғылар'), devicePanel()),
       h('section', { class: 'card' }, h('h2', {}, 'Бұл құралды қалай қолдану керек'),
-        h('ul', {}, h('li', {}, 'Бұл ойындар логопедтің жұмысын толықтырады және оны алмастырмайды.'), h('li', {}, 'Микрофон дауыстың бар-жоғын және сөйлеу қарқынын ғана байқайды. Айтылудың дұрыстығын ересек тыңдап тексереді.'), h('li', {}, 'Қарқын тым жылдам болса, ойын сыпайы түрде баяулауды ұсынады.'), h('li', {}, 'Деректер тек осы құрылғыдағы браузерде сақталады. Микрофон жазбасы сақталмайды және жіберілмейді.'))),
+        h('ul', {}, h('li', {}, 'Бұл ойындар логопедтің жұмысын толықтырады және оны алмастырмайды.'), h('li', {}, 'Микрофон дауыстың бар-жоғын және сөйлеу қарқынын ғана байқайды. Айтылудың дұрыстығын ересек тыңдап тексереді.'), h('li', {}, 'Қарқын тым жылдам болса, ойын сыпайы түрде баяулауды ұсынады.'), h('li', {}, 'Микрофонның тану нәтижесі сөйлеу дұрыстығының толық логопедиялық бағасы болып саналмайды.'), h('li', {}, 'Сөйлеуді тану (қосылса) браузердің қызметі арқылы жұмыс істейді, кейбір браузерлер дыбысты өз серверіне жібереді. Ол әдепкіде өшірулі.'), h('li', {}, 'Деректер тек осы құрылғыдағы браузерде сақталады. Микрофон жазбасы сақталмайды және жіберілмейді.'))),
       h('section', { class: 'card' }, h('h2', {}, 'Деректерді басқару'), reset, resetMsg));
     wrap.querySelector('h1').focus && wrap.querySelector('h1').setAttribute('tabindex', '-1'); wrap.querySelector('h1').focus();
   }
@@ -443,7 +512,7 @@ ENGINES.breath = (ui) => {
     }))));
   }
   function ready() {
-    build(); area.replaceChildren(h('p', { class: 'task-txt' }, st.text), scene, guide, h('div', { class: 'row center' }, btn('Дем алуды бастау', 'btn-sun', begin, { id: 'go-breath' })));
+    build(); area.replaceChildren(...[h('p', { class: 'task-txt' }, st.text), ui.game.cam === 'none' ? null : h('p', { class: 'note' }, '📷 Камераны қосып, өзіңді экраннан көріп отырып орында.'), scene, guide, h('div', { class: 'row center' }, btn('Дем алуды бастау', 'btn-sun', begin, { id: 'go-breath' })), camToggle(ui)].filter(Boolean));
     label.textContent = 'Дайын болғанда бастаймыз.'; circle.style.transform = 'scale(0.62)';
   }
   async function begin() {
@@ -453,7 +522,7 @@ ENGINES.breath = (ui) => {
     let elapsed = 0, last = null;
     for (const pn of phases) {
       const P = pn === 'prep' ? { t: 1500, label: 'Ауызбен баяу шығаруға дайын бол…', from: 1.18, to: 1.18 } : (PHASE[pn] || PHASE.rest);
-      label.textContent = P.label; announce(P.label);
+      const lt = (st.labels && st.labels[pn]) || P.label; label.textContent = lt; announce(lt);
       const t0 = performance.now(); let raf;
       await new Promise((res) => {
         const f = (now) => {
@@ -469,7 +538,12 @@ ENGINES.breath = (ui) => {
       if (!ui.alive()) return; elapsed += P.t;
     }
     update(1); label.textContent = 'Дайын!'; count.textContent = '';
-    await ui.wait(500); if (ui.alive()) ui.ok();
+    await ui.wait(500); if (!ui.alive()) return;
+    if (st.confirm) {
+      label.textContent = 'Жаттығу аяқталды. Орындадың ба?'; const row = area.querySelector('.row');
+      if (row) row.replaceChildren(btn('✅ Орындадым', 'btn-sun xl', () => ui.ok(), { id: 'done-breath' }));
+      const d = $('#done-breath'); if (d) d.focus({ preventScroll: true });
+    } else ui.ok();
   }
   if (st.choose) chooseStage(); else ready();
 };
@@ -572,56 +646,85 @@ function camToggle(ui) {
 }
 
 /* ---------- АЙТУ / ОҚУ ---------- */
-function mountSay(ui, box, sp, onDone) {
+function mountSay(ui, box, sp0, onDone) {
+  const sp = Object.assign({}, sp0, { text: fillName(sp0.text), answer: sp0.answer ? fillName(sp0.answer) : sp0.answer });
   const model = sp.answer || sp.text;
   const showBlank = sp.answer && !sp.free;
+  const shown = (t) => (sp.upper ? t.toUpperCase() : t);
+  const dispText = sp.rhythm && sp.syl ? sp.syl.map((w) => w.join('-')).join(' ') : sp.text;
   const textEl = h('p', { class: 'say-text' + (sp.rhythm ? ' rh' : ''), 'aria-label': sp.text });
-  const wels = wordsEls(sp.text, { pace: sp.pace && !sp.free, pauseAfter: sp.pauseAfter && !sp.free });
+  const wels = wordsEls(shown(dispText), { pace: sp.pace && !sp.free, pauseAfter: sp.pauseAfter && !sp.free });
   wels.forEach((e, i) => { textEl.append(e, i < wels.length - 1 ? ' ' : ''); if (e.dataset.pause) textEl.append(h('span', { class: 'pmark', 'aria-hidden': 'true' })); });
   let rhythm = null;
   if (sp.rhythm && sp.syl) {
-    rhythm = h('div', { class: 'rhythm', 'aria-hidden': 'true' }, sp.syl.map((word, wi) => [h('span', { class: 'rw' }, word.map((s) => h('span', { class: 'beat' }, s))), wi < sp.syl.length - 1 ? h('span', { class: 'rpause pmark', 'aria-hidden': 'true' }) : null]));
+    rhythm = h('div', { class: 'rhythm', 'aria-hidden': 'true' }, sp.syl.map((word, wi) => [h('span', { class: 'rw' }, word.map((s) => h('span', { class: 'beat' }, shown(s)))), wi < sp.syl.length - 1 ? h('span', { class: 'rpause pmark', 'aria-hidden': 'true' }) : null]));
   }
   const status = h('p', { class: 'status', role: 'status', 'aria-live': 'polite' }, sp.cue ? 'Оқиғаны «' + sp.cue + '» сөзімен баста.' : '');
   const meter = h('div', { class: 'meter', 'aria-hidden': 'true', hidden: true }, h('i'));
   const verb = sp.verb || 'айт'; const past = { 'оқы': 'оқыдым', 'айт': 'айттым', 'қайтала': 'қайталадым' }[verb] || 'орындадым';
-  let guide = null, ses = null, fails = 0, finished = false, busy = false;
+  const slowMsg = tokenize(model).length > 1 ? FB.slowSentence : FB.slowWord;
+  let guide = null, ses = null, asr = null, fails = 0, finished = false, busy = false;
   const stopGuide = () => { if (guide) guide.stop(); guide = null; };
   const beats = rhythm ? $$('.beat', rhythm) : [];
   const runBeats = async (ms) => { for (const b of beats) { b.classList.add('hl'); if (!(await ui.wait(ms))) return false; b.classList.remove('hl'); } return true; };
   const startGuide = () => { stopGuide(); if (sp.free || !sp.pace && !sp.rhythm) return; if (rhythm) { runBeats(S.settings.paceMs * 0.8); } else guide = makeGuide(wels, ui, S.settings.paceMs); };
   const modelBtn = btn('🔊 Тыңда', 'btn-mint', async () => { startGuide(); await Say.speak(model, { rate: Math.min(0.75, S.settings.rate) }); });
   const finish = (res) => {
-    if (finished) return; finished = true; stopGuide(); if (ses) ses.stop();
-    if (sp.answer) { textEl.replaceChildren(sp.answer); }
-    box.append(h('p', { class: 'ok-line' }, sp.answer && sp.free ? '✓ Үлгі: ' + sp.answer : '✓ Жарайсың!'));
+    if (finished) return; finished = true; stopGuide(); if (ses) ses.stop(); if (asr) asr.stop();
+    if (sp.answer) { textEl.replaceChildren(shown(sp.answer)); }
+    box.append(h('p', { class: 'ok-line' }, '✓ ' + (sp.answer && sp.free ? 'Үлгі: ' + sp.answer : FB.ok)));
     if (res && res.url) addPlayback(box, res.url);
-    manual.hidden = true; listenBtn.hidden = true; onDone();
+    manual.hidden = true; listenBtn.hidden = true; if (hintBtn) hintBtn.hidden = true; onDone();
   };
   const manual = btn(sp.doneLabel ? '✅ ' + sp.doneLabel : '✅ Мен ' + past, 'btn-white', () => finish());
-  const listenBtn = btn(Media.micOn ? '🎤 ' + (verb === 'оқы' ? 'Оқу' : 'Айту') : '🎤 Микрофонмен ' + (verb === 'оқы' ? 'оқу' : 'айту'), 'btn-sun', async () => {
+  /* Микрофон қосулы кезде өту үшін дұрыс жауап керек. 3 сәтсіздіктен кейін ересек растай алады. */
+  const syncManual = () => { const strict = Media.micOn && fails < 3; manual.hidden = finished || strict; manual.textContent = fails >= 3 && Media.micOn ? '✅ Ересек растады: келесі кезең' : (sp.doneLabel ? '✅ ' + sp.doneLabel : '✅ Мен ' + past); };
+  Media.listeners.add(syncManual); ui.cleanup(() => Media.listeners.delete(syncManual));
+  const hintBtn = sp.hint ? btn('💡 Көмек', 'btn-white small', () => { status.textContent = 'Үлгі: ' + model; }) : null;
+  const micWord = verb === 'оқы' ? 'оқу' : 'айту';
+  const listenBtn = btn(Media.micOn ? '🎤 ' + (verb === 'оқы' ? 'Оқу' : 'Айту') : '🎤 Микрофонмен ' + micWord, 'btn-sun', async () => {
     if (busy) return; busy = true; listenBtn.disabled = true;
-    if (!Media.micOn) { status.textContent = 'Рұқсат күтіп тұрмын…'; const r = await Media.enableMic(); if (!r.ok) { status.textContent = r.msg + ' «' + manual.textContent.replace('✅ ', '') + '» батырмасын қолдан.'; busy = false; listenBtn.disabled = false; return; } listenBtn.textContent = '🎤 ' + (verb === 'оқы' ? 'Оқу' : 'Айту'); }
+    if (!Media.micOn) { status.textContent = 'Рұқсат күтіп тұрмын…'; const r = await Media.enableMic(); if (!r.ok) { status.textContent = r.msg + ' «Мен ' + past + '» батырмасын қолдан.'; busy = false; listenBtn.disabled = false; syncManual(); return; } listenBtn.textContent = '🎤 ' + (verb === 'оқы' ? 'Оқу' : 'Айту'); syncManual(); }
     if (!ui.alive()) return;
     status.textContent = 'Тыныш тұр… бір сәт.'; Snd.duck(true); let rdy = false; meter.hidden = false;
+    asr = ASR.enabled ? ASR.listen() : null;
     ses = Media.listen({ maxMs: 20000, endSilenceMs: sp.pace ? 1600 : 1200, onFrame: (f) => { if (!f.calibrating && !rdy) { rdy = true; status.textContent = 'Тыңдап тұрмын. Асықпай ' + verb + '!'; startGuide(); } meter.firstChild.style.width = Math.round(f.level * 100) + '%'; } });
-    ui.cleanup(() => ses && ses.stop());
+    ui.cleanup(() => { ses && ses.stop(); asr && asr.stop(); });
     const res = await ses.done; Snd.duck(false); stopGuide(); meter.firstChild.style.width = '0%'; meter.hidden = true;
+    let heard = null;
+    if (asr) { asr.stop(); status.textContent = 'Тексеріп жатырмын…'; heard = await Promise.race([asr.done, new Promise((r) => setTimeout(() => r(null), 2800))]); asr = null; }
     if (!ui.alive() || finished) return;
-    const words = tokenize(sp.free ? model : sp.text).length;
     if (res.aborted) { busy = false; listenBtn.disabled = false; return; }
-    if (res.voicedMs < 250) { fails++; ui.wrong('Дауысыңды естімедім. Микрофонға жақынырақ, асықпай айтып көрейік!'); status.textContent = fails >= 2 ? 'Әлі естілмей тұр. Дыбыс деңгейін тексер немесе «Мен ' + past + '» батырмасын бас.' : 'Дауыс естілмеді. Тағы бір рет.'; }
-    else if (sp.pace && words >= 3 && words / Math.max(1, res.spanMs / 1000) > 3.8) { ui.wrong('Сәл баяу айтып көрейік! Әр сөзді анық айт.'); status.textContent = 'Қарқын тым жылдам болды. Жасыл көмекшіні қарап, баяулап көр.'; }
-    else { finish(res); return; }
-    busy = false; await ui.wait(900); if (ui.alive()) listenBtn.disabled = false;
+    const words = tokenize(model).length;
+    const gotAlts = heard && !heard.error && heard.alts.length > 0;
+    if (res.voicedMs < 250 && !gotAlts) {
+      fails++; ui.wrong('Дауысыңды естімедім. Микрофонға жақынырақ, асықпай айтып көрейік!');
+      status.textContent = fails >= 3 ? 'Әлі естілмей тұр. Дыбыс деңгейін тексер немесе ересек растасын.' : 'Дауыс естілмеді. Тағы бір рет.';
+    } else if (heard && !heard.error && (!gotAlts || ASR.best(heard.alts, model) < (sp.free ? 0.5 : 0.6))) {
+      fails++; ui.wrong(slowMsg); status.textContent = gotAlts ? 'Естілгені: «' + heard.alts[0] + '». Үлгі: «' + model + '».' : 'Сөз танылмады. Асықпай, анық айтып көр.';
+    } else if (sp.pace && words >= 3 && words / Math.max(1, res.spanMs / 1000) > 3.8) {
+      fails++; ui.wrong(slowMsg); status.textContent = 'Қарқын тым жылдам болды. Көмекшіні қарап, баяулап көр.';
+    } else {
+      if (heard && heard.error) announce('Сөйлеуді тану қолжетімсіз, дауыс бойынша тексерілді.');
+      finish(res); return;
+    }
+    syncManual(); busy = false; await ui.wait(900); if (ui.alive()) listenBtn.disabled = false;
   });
   const parts = [];
   if (sp.pic) parts.push(picEl(sp.pic));
   if (sp.answer && showBlank || sp.free) parts.push(h('p', { class: 'cue' }, sp.free ? 'Суретке қарап сөйлем құрастыр.' : 'Сөйлемді толықтырып айт.'));
   if (!(sp.free && !sp.cue)) parts.push(textEl);
   if (rhythm) parts.push(rhythm);
-  parts.push(h('div', { class: 'row center' }, modelBtn, listenBtn, manual), meter, status, camToggle(ui), ui.game.mic === 'none' ? null : micNote(ui));
+  if (ASR.supported && !S.settings.asrAsked && ui.game.mic !== 'none' && !SC.asrPrompted) {
+    SC.asrPrompted = true;
+    const card = h('div', { class: 'asr-card', role: 'group', 'aria-label': 'Сөйлеуді тану' },
+      h('p', {}, '🗣️ Сайт айтқаныңды үлгімен салыстырсын ба? Ескерту: кейбір браузерлер (Chrome, Edge) дыбысты тану үшін өз серверіне жібереді. Ересек адам шешсін.'),
+      h('div', { class: 'row center' }, btn('Қосу', 'btn-mint small', () => { S.settings.asr = true; S.settings.asrAsked = true; save(); card.remove(); }), btn('Қазір емес', 'btn-white small', () => { S.settings.asrAsked = true; save(); card.remove(); })));
+    parts.push(card);
+  }
+  parts.push(h('div', { class: 'row center' }, modelBtn, listenBtn, hintBtn, manual), meter, status, camToggle(ui), ui.game.mic === 'none' ? null : micNote(ui));
   box.replaceChildren(...parts.filter(Boolean));
+  syncManual();
   if (sp.autoModel) setTimeout(() => { if (ui.alive()) modelBtn.click(); }, 500);
   ui.cleanup(stopGuide);
 }
@@ -660,7 +763,7 @@ ENGINES.choose = (ui) => {
       if (o.ok || st.any) {
         $$('.opt', optsBox).forEach((x) => { x.setAttribute('aria-disabled', 'true'); if (x !== b) x.hidden = true; }); b.classList.add('right'); Snd.play('ok');
         if (st.after) { const a = st.after; const text = a.text.replace('{t}', o.text); optsBox.after(after); mountSay(ui, after, Object.assign({}, a, { text }), () => ui.ok()); if (!spoken && !sfx) Say.speak(text); } else ui.ok();
-      } else { b.classList.add('wrongo'); b.setAttribute('aria-disabled', 'true'); ui.wrong('Тағы бір рет байқап көрейік! Мұқият қара.'); setTimeout(() => b.classList.remove('wrongo'), 600); }
+      } else { b.classList.add('wrongo'); b.setAttribute('aria-disabled', 'true'); ui.wrong(FB.wrong); setTimeout(() => b.classList.remove('wrongo'), 600); }
     });
     optsBox.append(b);
   });
@@ -778,7 +881,7 @@ ENGINES.diff = (ui) => {
   const left = h('div', { class: 'grid3', role: 'group', 'aria-label': 'Сол жақ сурет' }, st.a.map((e) => h('span', { class: 'cell fixed' }, e)));
   const counter = h('p', { class: 'task-txt' }, 'Табылған айырмашылық: 0 / ' + st.diffs.length);
   const right = h('div', { class: 'grid3', role: 'group', 'aria-label': 'Оң жақ сурет. Айырмашылықты тап' }, st.b.map((e, i) => { const b = h('button', { type: 'button', class: 'cell', 'aria-label': 'Ұяшық ' + (i + 1) + ': ' + e }, e);
-    b.addEventListener('click', () => { if (b.dataset.f) return; if (st.diffs.includes(i)) { b.dataset.f = '1'; b.classList.add('found'); b.setAttribute('aria-label', 'Табылды: ' + e); Snd.play('ok'); found++; counter.textContent = 'Табылған айырмашылық: ' + found + ' / ' + st.diffs.length; if (found === st.diffs.length) ui.ok(); } else { b.classList.add('wrongo'); ui.wrong('Бұл ұяшықтар бірдей. Басқасын қарап көрейік!'); setTimeout(() => b.classList.remove('wrongo'), 600); } }); return b; }));
+    b.addEventListener('click', () => { if (b.dataset.f) return; if (st.diffs.includes(i)) { b.dataset.f = '1'; b.classList.add('found'); b.setAttribute('aria-label', 'Табылды: ' + e); Snd.play('ok'); found++; counter.textContent = 'Табылған айырмашылық: ' + found + ' / ' + st.diffs.length; if (found === st.diffs.length) ui.ok(); } else { b.classList.add('wrongo'); ui.wrong(FB.wrong); setTimeout(() => b.classList.remove('wrongo'), 600); } }); return b; }));
   ui.area.replaceChildren(counter, h('div', { class: 'twin' }, left, right));
 };
 
@@ -787,9 +890,9 @@ ENGINES.find = (ui) => {
   const st = ui.step; let k = 0;
   const prompt = h('p', { class: 'task-txt', role: 'status', 'aria-live': 'polite' });
   const targets = st.targets;
-  const say = () => { const nm = NAMES[targets[k]] || ['сурет', 'суретті']; const t = nm[1][0].toUpperCase() + nm[1].slice(1) + ' тап!'; prompt.textContent = (targets.length > 1 ? (k + 1) + '/' + targets.length + '. ' : '') + t; Say.speak(t); };
+  const say = () => { const nm = NAMES[targets[k]] || ['сурет', 'суретті']; const t = nm[1][0].toUpperCase() + nm[1].slice(1) + ' тап!'; prompt.textContent = st.listen && Say.available ? (targets.length > 1 ? (k + 1) + '/' + targets.length + '. ' : '') + 'Тыңда да, затты тап!' : (targets.length > 1 ? (k + 1) + '/' + targets.length + '. ' : '') + t; Say.speak(t); };
   const grid = h('div', { class: 'grid4' }, st.grid.map((e) => { const nm = NAMES[e]; const b = h('button', { type: 'button', class: 'cell', 'aria-label': nm ? nm[0] : e }, e);
-    b.addEventListener('click', () => { if (b.dataset.f) return; if (e === targets[k]) { b.dataset.f = '1'; b.classList.add('found'); Snd.play('ok'); k++; if (k >= targets.length) { prompt.textContent = 'Барлығын таптың!'; ui.ok(); } else say(); } else { b.classList.add('wrongo'); ui.wrong('Бұл басқа сурет. Қайта қарап көрейік!'); setTimeout(() => b.classList.remove('wrongo'), 600); } }); return b; }));
+    b.addEventListener('click', () => { if (b.dataset.f) return; if (e === targets[k]) { b.dataset.f = '1'; b.classList.add('found'); Snd.play('ok'); k++; if (k >= targets.length) { prompt.textContent = 'Барлығын таптың!'; ui.ok(); } else say(); } else { b.classList.add('wrongo'); ui.wrong(FB.wrong); setTimeout(() => b.classList.remove('wrongo'), 600); } }); return b; }));
   ui.area.replaceChildren(h('div', { class: 'row center' }, prompt, btn('🔊 Қайталау', 'btn-mint small', () => say())), grid);
   setTimeout(() => ui.alive() && say(), 400);
 };
@@ -799,7 +902,7 @@ ENGINES.odd = (ui) => {
   const st = ui.step;
   const cells = Array.from({ length: st.n }, (_, i) => i === st.at ? st.odd : st.base);
   const grid = h('div', { class: 'grid3' }, cells.map((e, i) => { const b = h('button', { type: 'button', class: 'cell', 'aria-label': 'Ұяшық ' + (i + 1) + ': ' + e }, e);
-    b.addEventListener('click', () => { if (ui.done) return; if (i === st.at) { ui.done = true; b.textContent = st.base; b.classList.add('found'); b.setAttribute('aria-label', 'Түзетілді'); Snd.play('ok'); ui.ok(); } else { b.classList.add('wrongo'); ui.wrong('Бұл дұрыс зат. Қате затты іздейік!'); setTimeout(() => b.classList.remove('wrongo'), 600); } }); return b; }));
+    b.addEventListener('click', () => { if (ui.done) return; if (i === st.at) { ui.done = true; b.textContent = st.base; b.classList.add('found'); b.setAttribute('aria-label', 'Түзетілді'); Snd.play('ok'); ui.ok(); } else { b.classList.add('wrongo'); ui.wrong(FB.wrong); setTimeout(() => b.classList.remove('wrongo'), 600); } }); return b; }));
   ui.area.replaceChildren(h('p', { class: 'task-txt' }, 'Қате зат қайсы? Оны тап та, бас.'), grid);
 };
 
@@ -807,12 +910,12 @@ ENGINES.odd = (ui) => {
 ENGINES.seq = (ui) => {
   const st = ui.step; let pos = 0, busy = true;
   const msg = h('p', { class: 'task-txt', role: 'status', 'aria-live': 'polite' }, '');
-  const items = st.pool.map((e, i) => { const b = h('button', { type: 'button', class: 'cell', 'aria-label': 'Сурет ' + (i + 1) + ': ' + e }, e);
-    b.addEventListener('click', () => { if (busy) return; if (i === st.seq[pos]) { b.classList.add('found'); setTimeout(() => b.classList.remove('found'), 400); Snd.play('tap'); pos++; if (pos >= st.seq.length) { msg.textContent = 'Дұрыс ретпен таптың!'; busy = true; ui.ok(); } } else { b.classList.add('wrongo'); ui.wrong('Тағы бір рет қарайық. Көр де, қайтала!'); setTimeout(() => b.classList.remove('wrongo'), 600); pos = 0; showSeq(); } }); return b; });
+  const items = st.pool.map((e, i) => { const nm = NAMES[e] ? NAMES[e][0] : ''; const b = h('button', { type: 'button', class: 'cell seq-cell', 'aria-label': nm || ('Сурет ' + (i + 1)) }, h('span', { class: 'sq-e', 'aria-hidden': 'true' }, e), nm ? h('span', { class: 'sq-n', 'aria-hidden': 'true' }, nm) : null);
+    b.addEventListener('click', () => { if (busy) return; if (i === st.seq[pos]) { b.classList.add('found'); setTimeout(() => b.classList.remove('found'), 400); Snd.play('tap'); pos++; if (pos >= st.seq.length) { msg.textContent = 'Дұрыс ретпен таптың!'; busy = true; ui.ok(); } } else { b.classList.add('wrongo'); ui.wrong(FB.wrong); setTimeout(() => b.classList.remove('wrongo'), 600); pos = 0; showSeq(); } }); return b; });
   async function showSeq() {
     busy = true; pos = 0; msg.textContent = 'Қара! Суреттер жанады…';
     if (!(await ui.wait(700))) return;
-    for (const idx of st.seq) { items[idx].classList.add('lit'); Snd.play('tap'); if (!(await ui.wait(900))) return; items[idx].classList.remove('lit'); if (!(await ui.wait(300))) return; }
+    for (const idx of st.seq) { items[idx].classList.add('lit'); Snd.play('tap'); const nm = NAMES[st.pool[idx]]; if (nm) Say.speak(nm[0]); if (!(await ui.wait(1100))) return; items[idx].classList.remove('lit'); if (!(await ui.wait(300))) return; }
     msg.textContent = 'Енді сен қайтала! Суреттерді сол ретпен бас.'; busy = false;
   }
   ui.area.replaceChildren(msg, h('div', { class: 'grid-row' }, items), h('div', { class: 'row center' }, btn('👁 Қайта көрсету', 'btn-mint small', () => showSeq())));
@@ -830,7 +933,7 @@ ENGINES.pairs = (ui) => {
       b.dataset.open = '1'; b.firstChild.textContent = c.e; b.setAttribute('aria-label', 'Ашық: ' + c.e); Snd.play('tap');
       if (!first) { first = { b, c }; return; }
       if (first.c.e === c.e) { first.b.dataset.done = '1'; b.dataset.done = '1'; first.b.classList.add('found'); b.classList.add('found'); matched++; msg.textContent = 'Табылған жұп: ' + matched + ' / ' + st.emojis.length; Snd.play('ok'); first = null; if (matched === st.emojis.length) ui.ok(); }
-      else { lock = true; const f = first; first = null; ui.wrong('Бұл бірдей емес. Көргеніңді есте сақта!'); if (!(await ui.wait(900))) return; [f.b, b].forEach((x) => { delete x.dataset.open; x.firstChild.textContent = '❓'; x.setAttribute('aria-label', 'Жабық карточка'); }); lock = false; }
+      else { lock = true; const f = first; first = null; ui.wrong(FB.wrong); if (!(await ui.wait(900))) return; [f.b, b].forEach((x) => { delete x.dataset.open; x.firstChild.textContent = '❓'; x.setAttribute('aria-label', 'Жабық карточка'); }); lock = false; }
     }); return b; });
   ui.area.replaceChildren(msg, h('div', { class: 'grid4' }, cards));
 };
