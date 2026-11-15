@@ -54,7 +54,8 @@ html.hc .eyebrow { color: #000; }
 .brand { font-family: var(--display); font-weight: 900; font-size: 1.25rem; color: var(--ink); text-decoration: none; padding: .4rem .2rem; white-space: nowrap; }
 .tools { display: flex; gap: .5rem; flex-wrap: nowrap; }
 .btn.tool { min-height: 2.9rem; padding: .3rem .8rem; box-shadow: 0 3px 0 var(--line); }
-@media (max-width: 40rem) { .tl-t { display: none; } .brand { font-size: 1.05rem; } .btn.tool { padding: .3rem .6rem; } }
+@media (max-width: 62rem) { .tl-t { display: none; } } @media (max-width: 40rem) { .brand { font-size: 1.05rem; } .btn.tool { padding: .3rem .6rem; } }
+.btn.tool { white-space: nowrap; }
 
 /* ---------- Экрандар, аспан, бұлттар ---------- */
 .screen { position: relative; min-height: calc(100vh - 4.2rem); padding-block: 1.5rem 3rem; background: linear-gradient(180deg, var(--b1, var(--sky)) 0%, var(--b2, var(--sky2)) 100%); overflow: hidden; }
@@ -163,7 +164,7 @@ a.lv:hover { transform: translateY(-3px); }
 @keyframes shake { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
 .say-box { width: 100%; display: flex; flex-direction: column; align-items: center; gap: .8rem; }
 .say-text { margin: 0; font-size: clamp(1.8rem, 6vw, 3rem); font-weight: 800; font-family: var(--display); line-height: 1.5; max-width: 40rem; }
-.w { padding: .05em .15em; border-radius: .4em; transition: background .15s; } .w.hl { background: #5fe6a5; outline: 3px solid var(--line); } .w.pz { background: #ffd23f; } .pmark { font-size: .6em; margin: 0 .2em; }
+.w { padding: .05em .15em; border-radius: .4em; transition: background .15s; } .w.hl { background: #5fe6a5; outline: 3px solid var(--line); } .w.pz { background: #ffd23f; } .pmark { display: inline-block; width: .38em; height: .55em; margin: 0 .25em; border-left: .13em solid currentColor; border-right: .13em solid currentColor; opacity: .55; vertical-align: .05em; }
 .cue { margin: 0; font-weight: 900; color: var(--grape); } html.hc .cue { color: #000; }
 .rhythm { display: flex; flex-wrap: wrap; justify-content: center; gap: .4rem 1rem; } .rw { display: inline-flex; gap: .3rem; } .beat { min-width: 3rem; padding: .3rem .6rem; border: 3px solid var(--line); border-radius: 99px; font-weight: 900; background: #fff; } .beat.hl { background: var(--sun); transform: scale(1.15); } .rpause { align-self: center; }
 .meter { width: min(100%, 18rem); height: 1rem; border: 3px solid var(--line); border-radius: 99px; background: #fff; overflow: hidden; } .meter i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--mint), var(--sun)); transition: width .06s; }
@@ -220,3 +221,37 @@ html.reduce *, html.reduce *::before, html.reduce *::after { animation: none !im
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition-duration: .001s !important; scroll-behavior: auto !important; } .cl, .confetti { display: none; } }
 @media (max-width: 36rem) { .mrow { flex-direction: column; text-align: center; } .mrow .bubble::before { display: none; } .stage { padding: .9rem; } .btn.xl { font-size: 1.15rem; padding: .8rem 1.2rem; } .actions .btn { flex: 1 1 10rem; } }
 .lv.locked .lv-n { color: #3b3f52; }
+
+/* ---------- Суреттер (SVG көріністер) ---------- */
+.scene-pic { width: min(100%, 22rem); border: 4px solid var(--line); border-radius: 1.4rem; overflow: hidden; box-shadow: 0 5px 0 var(--line); background: #fff; filter: none; line-height: 0; }
+.scene-pic svg { width: 100%; height: auto; display: block; }
+
+/* ---------- Дыбыс созу: түсінікті қадамдар ---------- */
+.lseq { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .6rem; }
+.lcard { display: flex; flex-direction: column; align-items: center; min-width: 7rem; padding: .3rem 1rem; background: #fff; border: 4px solid var(--line); border-radius: 1.6rem; box-shadow: 0 5px 0 var(--line); opacity: .75; }
+.lcard.cur { opacity: 1; background: var(--sun); transform: scale(1.08); } .lcard.done { background: #b8f5d6; opacity: 1; }
+.lc-i { font-size: 2rem; line-height: 1.2; } .lc-l { font-size: 4.2rem; font-weight: 900; line-height: 1; } .larrow { font-size: 2rem; font-weight: 900; }
+.howto { text-align: left; margin: 0; padding-left: 1.4rem; display: grid; gap: .3rem; max-width: 36rem; font-weight: 700; background: rgba(255,255,255,.8); border: 3px solid var(--line); border-radius: 1.2rem; padding-block: .6rem; padding-right: 1rem; }
+.sbig { margin: 0; width: 100%; max-width: 36rem; padding: .7rem 1rem; font-size: 1.5rem; font-weight: 900; background: #fff; border: 4px solid var(--line); border-radius: 1.4rem; min-height: 4.2rem; display: flex; align-items: center; justify-content: center; text-align: center; }
+.sbig.count { background: #ffe9a8; font-size: 2rem; } .sbig.go { background: var(--mint); font-size: 1.8rem; } .sbig.ok { background: #b8f5d6; } .sbig.warn { background: #ffd6dc; }
+.meter.lg { height: 1.6rem; width: min(100%, 22rem); }
+.microw { display: flex; align-items: center; justify-content: center; gap: .6rem; flex-wrap: wrap; font-weight: 800; }
+.meter[hidden] { display: none; }
+
+/* ---------- Бағдаршам реті ---------- */
+.tl-order { list-style: none; margin: 0; padding: 0; display: grid; gap: .2rem; font-weight: 800; text-align: left; }
+.tl-order li::before { content: counter(tl) '. '; } .tl-order { counter-reset: tl; } .tl-order li { counter-increment: tl; }
+
+/* ---------- Құрастыру: тыныс белгісі ---------- */
+.preview-s { font-size: 1.5rem; }
+.opt .pm { font-size: 3.2rem; line-height: 1; font-weight: 900; }
+.punct { display: grid; gap: .8rem; justify-items: center; width: 100%; }
+
+/* ---------- Дыбыс жазбасы ---------- */
+.rec-card { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 1rem; padding: 1rem 1.2rem; background: #fff; border: 4px solid var(--line); border-radius: 1.6rem; }
+.rec-ico { font-size: 2.6rem; } .rec-txt { flex: 1 1 16rem; min-width: 0; display: grid; gap: .2rem; } .rec-state { margin: 0; font-weight: 800; }
+.rec-ind { background: #ffe0e4; color: var(--ink); } .rec-dot { width: .9rem; height: .9rem; border-radius: 50%; background: #d1203b; animation: blink 1.2s ease-in-out infinite; } @keyframes blink { 50% { opacity: .25; } }
+.rec-item { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; justify-content: center; } .rec-item audio { max-width: 100%; }
+.rec-done { width: 100%; max-width: 36rem; background: #fff; border: 4px solid var(--line); border-radius: 1.6rem; padding: 1rem; } .rec-done h2 { margin-bottom: .4rem; }
+.rec-row { display: grid; gap: .5rem; padding: .7rem 0; border-bottom: 2px dashed var(--line); } .rec-meta { display: flex; flex-wrap: wrap; gap: .2rem .8rem; align-items: baseline; }
+.rec-list { display: grid; gap: .3rem; }

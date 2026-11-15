@@ -39,9 +39,10 @@ try {
 } catch (e) { /* сақтау қол жетімсіз — жад ішінде жұмыс істейді */ }
 function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* ignore */ } }
 const gstat = (id) => (S.stats[id] = S.stats[id] || { attempts: 0, mistakes: 0, points: 0 });
-const starsOf = (id) => S.stars[id] || [false, false, false];
+const starsOf = (id) => { const g = GAMES.find((x) => x.id === id), n = g ? g.levels.length : 3, a = S.stars[id] || []; return Array.from({ length: n }, (_, i) => !!a[i]); };
 const unlocked = (id, l) => l === 1 || !!starsOf(id)[l - 2];
-const totalStars = () => Object.values(S.stars).reduce((n, a) => n + a.filter(Boolean).length, 0);
+const totalStars = () => GAMES.reduce((n, g) => n + starsOf(g.id).filter(Boolean).length, 0);
+const totalLevels = () => GAMES.reduce((n, g) => n + g.levels.length, 0);
 
 function applySettings() {
   const r = document.documentElement;
@@ -210,6 +211,7 @@ const Media = {
     } catch (e) { this.onChange(); return { ok: false, msg: this.errMsg(e), name: e && e.name }; }
   },
   disableMic() {
+    try { Rec.stop(); } catch (e) { /* ignore */ }
     if (this.micStream) this.micStream.getTracks().forEach((t) => t.stop());
     try { if (this.micNode) this.micNode.disconnect(); } catch (e) { /* ignore */ }
     this.micStream = null; this.micNode = null; this.analyser = null; this.onChange();
@@ -279,6 +281,83 @@ const Media = {
 };
 window.addEventListener('pagehide', () => Media.stopAll());
 
+
+/* Қысқа жазба (тапсырмадан кейін өз дауысын тыңдау үшін) */
+Media.rec1 = function () {
+  if (!this.micStream || !window.MediaRecorder) return null;
+  try {
+    const mr = new MediaRecorder(this.micStream), ch = [];
+    mr.ondataavailable = (e) => { if (e.data && e.data.size) ch.push(e.data); };
+    mr.start();
+    return { stop: () => new Promise((res) => { mr.onstop = () => { try { res(ch.length ? URL.createObjectURL(new Blob(ch, { type: mr.mimeType || 'audio/webm' })) : null); } catch (e) { res(null); } }; try { mr.stop(); } catch (e) { res(null); } }) };
+  } catch (e) { return null; }
+};
+
+/* ---------- Ойын жазбалары: IndexedDB (тек осы құрылғыда) ---------- */
+const RecDB = {
+  db: null, tried: false, mem: [], seq: 0,
+  open() {
+    return new Promise((res) => {
+      try {
+        const r = indexedDB.open('soileu-rec', 1);
+        r.onupgradeneeded = () => r.result.createObjectStore('recs', { keyPath: 'id', autoIncrement: true });
+        r.onsuccess = () => { this.db = r.result; res(true); };
+        r.onerror = () => res(false); r.onblocked = () => res(false);
+      } catch (e) { res(false); }
+    });
+  },
+  async ready() { if (!this.tried) { this.tried = true; await this.open(); } return !!this.db; },
+  async put(rec) {
+    if (await this.ready()) {
+      return new Promise((res) => { try { const tx = this.db.transaction('recs', 'readwrite'), rq = tx.objectStore('recs').add(rec); rq.onsuccess = () => res(rq.result); tx.onerror = () => { rec.id = ++this.seq; this.mem.push(rec); res(rec.id); }; } catch (e) { rec.id = ++this.seq; this.mem.push(rec); res(rec.id); } });
+    }
+    rec.id = ++this.seq; this.mem.push(rec); return rec.id;
+  },
+  async all() {
+    if (!(await this.ready())) return this.mem.slice().sort((a, b) => b.ts - a.ts);
+    return new Promise((res) => { try { const rq = this.db.transaction('recs').objectStore('recs').getAll(); rq.onsuccess = () => res(rq.result.sort((a, b) => b.ts - a.ts)); rq.onerror = () => res([]); } catch (e) { res([]); } });
+  },
+  async del(id) {
+    this.mem = this.mem.filter((r) => r.id !== id);
+    if (await this.ready()) await new Promise((res) => { try { const tx = this.db.transaction('recs', 'readwrite'); tx.objectStore('recs').delete(id); tx.oncomplete = () => res(); tx.onerror = () => res(); } catch (e) { res(); } });
+  },
+  async clear() { const a = await this.all(); for (const r of a) await this.del(r.id); },
+  async prune(max) { const a = await this.all(); for (const r of a.slice(max)) await this.del(r.id); }
+};
+
+/* Ойынмен таныстырудан бастап аяқталғанға дейін үздіксіз жазу */
+const Rec = {
+  cur: null, last: null, skip: null, listeners: new Set(),
+  get active() { return !!(this.cur && this.cur.mr.state === 'recording'); },
+  emit() { this.listeners.forEach((f) => { try { f(); } catch (e) { /* ignore */ } }); },
+  start(gid, title) {
+    if (!Media.micOn || !window.MediaRecorder) return false;
+    if (this.cur && this.cur.gid === gid) return true;
+    if (this.cur) this.stop();
+    try {
+      const mr = new MediaRecorder(Media.micStream), ctx = { gid, title, t0: Date.now(), chunks: [], waiters: [], mr };
+      mr.ondataavailable = (e) => { if (e.data && e.data.size) ctx.chunks.push(e.data); };
+      mr.onstop = async () => {
+        if (this.cur === ctx) this.cur = null;
+        let rec = null; const ms = Date.now() - ctx.t0;
+        if (ctx.chunks.length && ms > 1500) {
+          const blob = new Blob(ctx.chunks, { type: mr.mimeType || 'audio/webm' });
+          rec = { gid: ctx.gid, title: ctx.title, ts: ctx.t0, ms, type: blob.type, blob };
+          rec.id = await RecDB.put(rec); await RecDB.prune(15); this.last = rec;
+        }
+        ctx.waiters.forEach((f) => f(rec)); this.emit();
+      };
+      this.cur = ctx; mr.start(1000); this.emit(); return true;
+    } catch (e) { this.cur = null; return false; }
+  },
+  stop() {
+    const c = this.cur; if (!c) return Promise.resolve(null);
+    return new Promise((res) => { c.waiters.push(res); try { if (c.mr.state !== 'inactive') c.mr.stop(); else res(null); } catch (e) { res(null); } });
+  }
+};
+const recExt = (t) => (/mp4|aac/.test(t || '') ? 'm4a' : /ogg/.test(t || '') ? 'ogg' : 'webm');
+const fmtMs = (ms) => { const s = Math.round(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+
 /* ---------- Диалог (<dialog>) ---------- */
 let dlgOpener = null;
 function openDlg(title, body, opts) {
@@ -310,8 +389,8 @@ function devicePanel() {
     row('🎤', 'Микрофон', () => Media.micOn, () => Media.enableMic(), () => Media.disableMic(), 'mic'),
     row('📷', 'Камера', () => Media.camOn, () => Media.enableCam(), () => Media.disableCam(), 'cam'),
     msg,
-    h('p', { class: 'privacy' }, '🔒 Дыбыс пен бейне тек осы құрылғыда өңделеді. Ештеңе интернетке жіберілмейді және сақталмайды. Камера тек өзіңді көру үшін.'),
-    h('p', { class: 'privacy' }, 'Микрофон дауыстың бар-жоғын және қарқынын ғана байқайды. Сөздің дұрыстығын логопед немесе ересек тексереді. Құрылғысыз да ойнауға болады.')
+    h('p', { class: 'privacy' }, '🔒 Микрофон қосулы кезде ойын таныстырылымынан бастап аяқталғанға дейін дыбыс жазылады. Жазба тек осы құрылғыда (браузер жадында) сақталады, интернетке жіберілмейді. Оны «Логопедке арналған бөлім» ішінде тыңдауға, жүктеп алуға немесе өшіруге болады. Камера бейнесі жазылмайды, тек өзіңді көру үшін.'),
+    h('p', { class: 'privacy' }, 'Ойынның өзі дауыстың бар-жоғын және қарқынын ғана байқайды. Сөздің дұрыстығын логопед жазбаны тыңдап тексереді. Құрылғысыз да ойнауға болады.')
   );
   render(); const f = () => { if (root.isConnected) { const m = msg.textContent; render(); msg.textContent = m; } }; Media.listeners.add(f);
   return root;
